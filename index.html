@@ -527,6 +527,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const CATALOG = {
   'CHOCOLATE': {
@@ -807,12 +808,40 @@ function descargarExcel() {
     r.gramaje, r.precioNormal, r.tienePromo, r.precioPromo, r.nombrePromo,
     r.vigIni, r.vigFin, r.comentarios, r.fotoCapturada
   ]);
-  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-  ws['!cols'] = headers.map((_, i) => ({ wch: i === 6 ? 42 : i < 4 ? 18 : 16 }));
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Captura');
-  XLSX.utils.writeFile(wb, `Captura_Precios_${visita.fecha || new Date().toISOString().split('T')[0]}_${visita.cadena || 'promotor'}.xlsx`);
-  showToast('Descargando Excel...', 'accent');
+  const fname = `Captura_Precios_${visita.fecha || new Date().toISOString().split('T')[0]}_${(visita.cadena||'promotor').replace(/\s/g,'_')}`;
+
+  try {
+    if (typeof XLSX !== 'undefined' && XLSX.utils && typeof XLSX.utils.writeFile === 'function') {
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+      ws['!cols'] = headers.map((_, i) => ({ wch: i === 6 ? 42 : i < 4 ? 18 : 16 }));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Captura');
+      XLSX.utils.writeFile(wb, fname + '.xlsx');
+      showToast('Descargando Excel...', 'accent');
+    } else {
+      descargarCSV(headers, rows, fname);
+    }
+  } catch(e) {
+    descargarCSV(headers, rows, fname);
+  }
+}
+
+function descargarCSV(headers, rows, fname) {
+  const escape = v => {
+    if (v == null) return '';
+    const s = String(v);
+    return s.includes(',') || s.includes('"') || s.includes('\n') ? '"' + s.replace(/"/g,'""') + '"' : s;
+  };
+  const csv = [headers, ...rows].map(r => r.map(escape).join(',')).join('\n');
+  const bom = '\uFEFF';
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = fname + '.csv';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Descargando CSV (abre con Excel)', 'accent');
 }
 
 document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
