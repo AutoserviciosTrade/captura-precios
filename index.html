@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#0F2744">
+<title>Captura de Precios</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --brand: #0F2744;
+    --brand-mid: #1A3D6B;
+    --accent: #2ECC9A;
+    --accent-dark: #1D9E75;
+    --danger: #E24B4A;
+    --warn-bg: #FFF7E6;
+    --warn-border: #F5C842;
+    --promo-bg: #E8F8F2;
+    --promo-border: #2ECC9A;
+    --bg: #F4F6FA;
+    --surface: #FFFFFF;
+    --text: #0F2744;
+    --text-muted: #6B7A99;
+    --border: #DDE3EF;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 2px 12px rgba(15,39,68,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--brand);
+    padding: 14px 20px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-left h1 { color: #fff; font-size: 16px; font-weight: 600; letter-spacing: -.3px; }
+  .header-left p  { color: #8BAED4; font-size: 12px; margin-top: 1px; }
+  .badge-count {
+    background: var(--accent);
+    color: var(--brand);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'DM Mono', monospace;
+    padding: 4px 10px;
+    border-radius: 20px;
+    min-width: 36px;
+    text-align: center;
+  }
+
+  /* PROGRESS */
+  .progress-wrap { background: var(--brand-mid); height: 3px; }
+  .progress-bar  { height: 3px; background: var(--accent); transition: width .35s ease; }
+
+  /* STEPS NAV */
+  .steps-nav {
+    display: flex;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .step-tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px 4px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    transition: all .2s;
+  }
+  .step-tab.active { color: var(--brand); border-bottom-color: var(--accent); }
+  .step-tab .num {
+    display: inline-flex;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--border);
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    margin-bottom: 3px;
+    font-family: 'DM Mono', monospace;
+  }
+  .step-tab.active .num  { background: var(--accent); color: var(--brand); }
+  .step-tab.done .num    { background: var(--brand); color: #fff; }
+  .step-tab.done { color: var(--brand); }
+
+  /* CONTENT */
+  .content { padding: 16px; max-width: 500px; margin: 0 auto; padding-bottom: 100px; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+  }
+  .card-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .card-title::before {
+    content: '';
+    display: inline-block;
+    width: 3px;
+    height: 14px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  /* FIELDS */
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+  .field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .field label .req { color: var(--danger); margin-left: 2px; }
+  .field input,
+  .field select,
+  .field textarea {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    color: var(--text);
+    background: var(--surface);
+    outline: none;
+    transition: border-color .2s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus { border-color: var(--accent); }
+  .field textarea { resize: none; height: 76px; line-height: 1.5; }
+  .field select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7A99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+  }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  /* TOGGLE */
+  .toggle-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 13px 14px;
+    margin-bottom: 14px;
+    cursor: pointer;
+  }
+  .toggle-card-label { font-size: 15px; font-weight: 500; color: var(--text); }
+  .toggle-card-sub   { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+  .toggle-switch {
+    width: 48px; height: 26px;
+    background: var(--border);
+    border-radius: 26px;
+    position: relative;
+    transition: background .25s;
+    flex-shrink: 0;
+  }
+  .toggle-switch::after {
+    content: '';
+    position: absolute;
+    width: 20px; height: 20px;
+    background: #fff;
+    border-radius: 50%;
+    top: 3px; left: 3px;
+    transition: transform .25s;
+    box-shadow: 0 1px 4px rgba(0,0,0,.15);
+  }
+  .toggle-switch.on { background: var(--accent); }
+  .toggle-switch.on::after { transform: translateX(22px); }
+
+  /* PROMO FIELDS */
+  .promo-box {
+    background: var(--promo-bg);
+    border: 1.5px solid var(--promo-border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    margin-bottom: 14px;
+    display: none;
+  }
+  .promo-box.show { display: block; }
+  .promo-box .field label { color: #0F5C3E; }
+  .promo-box input, .promo-box select {
+    border-color: rgba(46,204,154,.4);
+    background: #fff;
+  }
+
+  /* PHOTO */
+  .photo-upload {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-sm);
+    padding: 24px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    background: var(--bg);
+    margin-bottom: 14px;
+  }
+  .photo-upload:hover { border-color: var(--accent); background: var(--promo-bg); }
+  .photo-upload svg { color: var(--text-muted); margin-bottom: 8px; }
+  .photo-upload p   { font-size: 14px; color: var(--text-muted); }
+  .photo-upload small { font-size: 12px; color: var(--border); }
+  .photo-preview {
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    margin-bottom: 14px;
+    display: none;
+    border: 1px solid var(--border);
+  }
+
+  /* BUTTONS */
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    transition: opacity .15s, transform .1s;
+    margin-bottom: 10px;
+  }
+  .btn:active { transform: scale(.98); }
+  .btn-primary   { background: var(--brand); color: #fff; }
+  .btn-accent    { background: var(--accent); color: var(--brand); }
+  .btn-outline   { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
+  .btn-danger    { background: #FFF0F0; color: var(--danger); border: 1.5px solid #FFCFCF; }
+
+  /* RECORD CARDS */
+  .record {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    box-shadow: var(--shadow);
+  }
+  .record-info { flex: 1; min-width: 0; }
+  .record-prod { font-size: 14px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .record-meta { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+  .record-price { font-family: 'DM Mono', monospace; font-size: 15px; font-weight: 500; color: var(--brand); white-space: nowrap; }
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 4px;
+  }
+  .tag-si  { background: #E2F8EF; color: #0F5C3E; }
+  .tag-no  { background: #F0F2F8; color: #4A5580; }
+
+  /* SUMMARY STATS */
+  .stats-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .stat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    text-align: center;
+  }
+  .stat-num  { font-family: 'DM Mono', monospace; font-size: 22px; font-weight: 500; color: var(--brand); }
+  .stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  /* EMPTY STATE */
+  .empty {
+    text-align: center;
+    padding: 32px 20px;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--brand);
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 40px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 999;
+    transition: transform .35s cubic-bezier(.34,1.56,.64,1);
+    white-space: nowrap;
+    box-shadow: 0 4px 20px rgba(15,39,68,.25);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.accent { background: var(--accent); color: var(--brand); }
+
+  .visita-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--brand);
+    color: #fff;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 14px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>Captura de Precios</h1>
+    <p id="header-sub">Competencia</p>
+  </div>
+  <div class="badge-count" id="badge">0</div>
+</div>
+<div class="progress-wrap">
+  <div class="progress-bar" id="progress" style="width:0%"></div>
+</div>
+
+<div class="steps-nav">
+  <div class="step-tab active" id="tab1">
+    <div class="num">1</div><br>Visita
+  </div>
+  <div class="step-tab" id="tab2">
+    <div class="num">2</div><br>Producto
+  </div>
+  <div class="step-tab" id="tab3">
+    <div class="num">3</div><br>Resumen
+  </div>
+</div>
+
+<!-- STEP 1 -->
+<div id="step1" class="content">
+  <div class="card">
+    <div class="card-title">Datos de la visita</div>
+    <div class="field">
+      <label>Nombre del promotor <span class="req">*</span></label>
+      <input type="text" id="promotor" placeholder="Tu nombre completo" autocomplete="name">
+    </div>
+    <div class="field">
+      <label>Cadena / Tienda <span class="req">*</span></label>
+      <select id="cadena">
+        <option value="">— Selecciona —</option>
+        <option>Alsuper Plus</option><option>Bodega Aurrera</option>
+        <option>Calimax</option><option>Calimax Plus</option>
+        <option>Chedraui Selecto</option><option>Hiper</option>
+        <option>La Comer</option><option>Sumesa</option>
+        <option>Super Chedraui Selecto</option><option>Supercenter</option>
+        <option>Sam's Club</option><option>Costco</option><option>Otra</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Ciudad / Sucursal <span class="req">*</span></label>
+      <input type="text" id="ciudad" placeholder="Ej: Guadalajara, Plaza Patria">
+    </div>
+    <div class="field">
+      <label>Fecha <span class="req">*</span></label>
+      <input type="date" id="fecha">
+    </div>
+  </div>
+  <button class="btn btn-primary" onclick="irPaso2()">Comenzar captura</button>
+</div>
+
+<!-- STEP 2 -->
+<div id="step2" class="content" style="display:none">
+  <div id="visita-chip-wrap"></div>
+
+  <div class="card">
+    <div class="card-title">Identificación del producto</div>
+    <div class="field">
+      <label>Categoría <span class="req">*</span></label>
+      <select id="categoria" onchange="actualizarMarcas()">
+        <option value="">— Selecciona categoría —</option>
+        <option>CARAMELO SUAVE</option><option>CHOCOLATE</option>
+        <option>CHOCOLATE MALVAVISCO</option><option>GOMITAS</option>
+        <option>MALVAVISCO</option><option>MAZAPANES</option>
+        <option>PALETAS</option><option>PAQUETES</option>
+        <option>PULPAS</option><option>SALSAS</option><option>UNTABLES</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Marca <span class="req">*</span></label>
+      <select id="marca" onchange="actualizarProductos()">
+        <option value="">— Primero elige categoría —</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Producto <span class="req">*</span></label>
+      <select id="producto">
+        <option value="">— Primero elige marca —</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Gramaje / Presentación</label>
+      <input type="text" id="gramaje" placeholder="Ej: 48g, 300g, 12 pzs">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Precio</div>
+    <div class="field">
+      <label>Precio normal ($) <span class="req">*</span></label>
+      <input type="number" id="precio" step="0.01" min="0" placeholder="0.00" inputmode="decimal">
+    </div>
+    <div class="toggle-card" onclick="togglePromo()">
+      <div>
+        <div class="toggle-card-label">¿Tiene promoción activa?</div>
+        <div class="toggle-card-sub" id="promo-sub">Toca para activar</div>
+      </div>
+      <div class="toggle-switch" id="toggle-sw"></div>
+    </div>
+    <div class="promo-box" id="promo-box">
+      <div class="field">
+        <label>Precio promoción ($)</label>
+        <input type="number" id="precio-promo" step="0.01" min="0" placeholder="0.00" inputmode="decimal">
+      </div>
+      <div class="field">
+        <label>Nombre / descripción de la promo</label>
+        <input type="text" id="nombre-promo" placeholder="Ej: 2x1, Precio especial, 3x2...">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Vigencia inicio</label>
+          <input type="date" id="vig-ini">
+        </div>
+        <div class="field">
+          <label>Vigencia fin</label>
+          <input type="date" id="vig-fin">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Evidencia fotográfica</div>
+    <img id="foto-preview" class="photo-preview">
+    <div class="photo-upload" id="photo-area" onclick="document.getElementById('foto-input').click()">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" display="block" margin="0 auto"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      <p>Toca para tomar foto</p>
+      <small>JPG, PNG — desde cámara o galería</small>
+    </div>
+    <input type="file" id="foto-input" accept="image/*" capture="environment" style="display:none" onchange="previsualizarFoto(this)">
+    <div class="field">
+      <label>Comentarios</label>
+      <textarea id="comentarios" placeholder="Observaciones sobre el producto, ubicación en tienda, etc."></textarea>
+    </div>
+  </div>
+
+  <button class="btn btn-accent" onclick="guardarRegistro()">Guardar registro</button>
+  <button class="btn btn-outline" onclick="irPaso1()">Cambiar datos de visita</button>
+</div>
+
+<!-- STEP 3 -->
+<div id="step3" class="content" style="display:none">
+  <div class="stats-row">
+    <div class="stat-box">
+      <div class="stat-num" id="stat-total">0</div>
+      <div class="stat-label">Total</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num" id="stat-promo" style="color:var(--accent-dark)">0</div>
+      <div class="stat-label">Con promo</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num" id="stat-foto" style="color:var(--brand-mid)">0</div>
+      <div class="stat-label">Con foto</div>
+    </div>
+  </div>
+
+  <button class="btn btn-accent" onclick="descargarExcel()">Descargar Excel del dia</button>
+  <button class="btn btn-primary" onclick="irPaso2()">Capturar otro producto</button>
+
+  <div id="lista-registros"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+const CATALOG = {
+  'CHOCOLATE': {
+    'MILKY WAY':['MARS MILKY WAY 48GR','MARS MILKY WAY MINI 180GR'],
+    'SNICKERS':['SNICKERS SNACK 21.5G','SNICKERS XTREME 40G','SNICKERS 48GR','SNICKERS 2 PACK 83G'],
+    "HERSHEY'S":["HERSHEYS LECHE 100G","HERSHEYS ALMENDRAS 100G","HERSHEYS SPECIAL DARK"],
+    'RICOLINO':['RICOLINO BUBULUBU 35G','RICOLINO MINI PALETA 100G'],
+    'NESTLE':['NESTLE CRUNCH 33G','NESTLE ABUELITA 90G'],
+    'MARS':['MARS TWIX 50G','MARS M&M CACAHUATE 45G','MARS M&M CHOCOLATE 45G'],
+    'LINDT':['LINDT EXCELLENCE 70% 100G','LINDT MILK 100G'],
+  },
+  'CHOCOLATE MALVAVISCO': {
+    'RICOLINO':['RICOLINO PALETA PAYASO 25G','RICOLINO BUBULUBU JALEA 35G'],
+    'GREAT VALUE':['MALVAVISCOS MINIS GREAT VALUE 130G'],
+    'MONDELEZ':['OREO ORIGINAL 117G','OREO DOBLE RELLENO 117G'],
+  },
+  'GOMITAS': {
+    'RICOLINO':['RICOLINO GOMITAS OSITOS 200G','RICOLINO GOMITAS SURTIDAS 150G'],
+    'HARIBO':['HARIBO OSITOS ORO 100G','HARIBO GUSANOS 100G'],
+    'DULCES VERO':['VERO GOMITAS SANDIA 150G','VERO GOMITAS MANGO 150G'],
+    'ARCOR':['ARCOR GOMITAS SURTIDAS 200G'],
+  },
+  'MAZAPANES': {
+    'DE LA ROSA':['MAZAPAN DE LA ROSA 30G','MAZAPAN DE LA ROSA DISPLAY 12PZ','MAZAPAN DE LA ROSA GIGANTE 60G'],
+    'PICARD':['PICARD MAZAPAN 30G','PICARD MAZAPAN CON CHOCOLATE 35G'],
+    'MONTES':['MAZAPAN MONTES 30G'],
+  },
+  'PALETAS': {
+    'RICOLINO':['PALETA PAYASO MINI 25G','PALETA PAYASO GRANDE 35G'],
+    "DULCES VERO":['VERO MANGO 16G','VERO ELOTE 16G','VERO SANDIA 16G','VERO REBANADITA 16G'],
+    "SONRIC'S":['SONRICS PALETA BOING 18G','SONRICS PALETA CHAMOY 18G'],
+  },
+  'CARAMELO SUAVE': {
+    'WINIS':['WINIS CUADRETA 103.5G','WINIS ACID UP 300G','WINIS BOOM TORCIDITO 300G','WINIS ACID UP 60G'],
+    'ARCOR':['ARCOR BUTTER TOFFEE 150G','ARCOR MENTA 100G','ARCOR CARAMELO DURO 200G'],
+    'CANELS':['CANELS ORIGINAL 12PZ','CANELS MENTA 12PZ'],
+  },
+  'PULPAS': {
+    'DULCES VERO':['PULPA SANDIA VERO 35G','PULPA MANGO VERO 35G','PULPA TAMARINDO VERO 35G'],
+    "SONRIC'S":['PULPA DE TAMARINDO SONRICS 35G'],
+    'GUANDY':['GUANDY PULPA CHAMOY 35G'],
+  },
+  'MALVAVISCO': {
+    'RICOLINO':['RICOLINO MALVAVISCO TUBO 200G','RICOLINO MALVAVISCO MINI 100G'],
+    'GREAT VALUE':['MALVAVISCO MINI GV 200G','MALVAVISCO GRANDE GV 400G'],
+  },
+  'PAQUETES': {
+    'WINIS':['WINIS SURTIDO 600G','WINIS MINI PACK 150G'],
+    'RICOLINO':['RICOLINO SURTIDO 400G','RICOLINO MINI SURTIDO 200G'],
+    'MONDELEZ':['MONDELEZ SURTIDO GALLETAS 500G'],
+  },
+  'SALSAS': {
+    'CHILES TAPATIOS':['SALSA BOTANERA 145ML','SALSA VALENTINA 370ML','SALSA CHAMOY 240ML'],
+    'SUSALIA':['SUSALIA BOTANERA 150ML'],
+    'CHAMARINDO':['CHAMARINDO CHAMOY 240ML'],
+  },
+  'UNTABLES': {
+    'SMUCKER':['SMUCKER FRESA 340G','SMUCKER UVA 340G','SMUCKER MULTIFRUTA 340G'],
+    'HORMEL FOODS':['NUTELLA 400G','NUTELLA 200G'],
+    'LA COMER':['MERMELADA FRESA LA COMER 400G'],
+  }
+};
+
+let records = [];
+let visita = {};
+let promoOn = false;
+
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' ' + type : '');
+  setTimeout(() => t.className = 'toast', 2500);
+}
+
+function setStep(n) {
+  [1,2,3].forEach(i => {
+    document.getElementById('step'+i).style.display = i===n ? 'block' : 'none';
+    const tab = document.getElementById('tab'+i);
+    tab.className = 'step-tab' + (i===n ? ' active' : i<n ? ' done' : '');
+  });
+  const pct = n===1 ? 0 : n===2 ? 50 : 100;
+  document.getElementById('progress').style.width = pct + '%';
+}
+
+function irPaso1() { setStep(1); }
+
+function irPaso2() {
+  if (step2Needs()) { setStep(2); renderChip(); return; }
+  setStep(2);
+  renderChip();
+}
+
+function step2Needs() { return visita.promotor; }
+
+function renderChip() {
+  if (!visita.promotor) return;
+  document.getElementById('visita-chip-wrap').innerHTML =
+    `<div class="visita-chip">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      ${visita.promotor} &mdash; ${visita.cadena} &mdash; ${visita.ciudad}
+    </div>`;
+}
+
+function irPaso1() {
+  setStep(1);
+  document.getElementById('header-sub').textContent = 'Datos de la visita';
+}
+
+function irPaso2() {
+  setStep(2);
+  renderChip();
+  document.getElementById('header-sub').textContent = visita.cadena || 'Captura de producto';
+}
+
+function irPaso3() {
+  setStep(3);
+  renderResumen();
+  document.getElementById('header-sub').textContent = 'Resumen del día';
+}
+
+function irPaso1() { setStep(1); document.getElementById('header-sub').textContent = 'Datos de la visita'; }
+
+function irPaso2Btn() {
+  setStep(2);
+  renderChip();
+  document.getElementById('header-sub').textContent = visita.cadena || 'Captura';
+}
+
+function validarPaso1() {
+  const p = document.getElementById('promotor').value.trim();
+  const c = document.getElementById('cadena').value;
+  const ci = document.getElementById('ciudad').value.trim();
+  if (!p) { showToast('Escribe tu nombre'); return false; }
+  if (!c) { showToast('Selecciona la cadena'); return false; }
+  if (!ci) { showToast('Escribe la ciudad o sucursal'); return false; }
+  return true;
+}
+
+function irPaso2() {
+  if (!validarPaso1()) return;
+  visita = {
+    promotor: document.getElementById('promotor').value.trim(),
+    cadena:   document.getElementById('cadena').value,
+    ciudad:   document.getElementById('ciudad').value.trim(),
+    fecha:    document.getElementById('fecha').value,
+  };
+  setStep(2);
+  renderChip();
+  document.getElementById('header-sub').textContent = visita.cadena;
+}
+
+function actualizarMarcas() {
+  const cat = document.getElementById('categoria').value;
+  const selMarca = document.getElementById('marca');
+  const selProd  = document.getElementById('producto');
+  selMarca.innerHTML = '<option value="">— Selecciona marca —</option>';
+  selProd.innerHTML  = '<option value="">— Primero elige marca —</option>';
+  if (!cat || !CATALOG[cat]) return;
+  Object.keys(CATALOG[cat]).forEach(m => {
+    const o = document.createElement('option');
+    o.value = m; o.textContent = m;
+    selMarca.appendChild(o);
+  });
+}
+
+function actualizarProductos() {
+  const cat = document.getElementById('categoria').value;
+  const mar = document.getElementById('marca').value;
+  const sel = document.getElementById('producto');
+  sel.innerHTML = '<option value="">— Selecciona producto —</option>';
+  if (!cat || !mar || !CATALOG[cat] || !CATALOG[cat][mar]) return;
+  CATALOG[cat][mar].forEach(p => {
+    const o = document.createElement('option');
+    o.value = p; o.textContent = p;
+    sel.appendChild(o);
+  });
+}
+
+function togglePromo() {
+  promoOn = !promoOn;
+  const sw = document.getElementById('toggle-sw');
+  const box = document.getElementById('promo-box');
+  const sub = document.getElementById('promo-sub');
+  sw.className  = 'toggle-switch' + (promoOn ? ' on' : '');
+  box.className = 'promo-box'     + (promoOn ? ' show' : '');
+  sub.textContent = promoOn ? 'Promo activa — llena los detalles' : 'Toca para activar';
+}
+
+function previsualizarFoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('foto-preview');
+    img.src = e.target.result;
+    img.style.display = 'block';
+    document.getElementById('photo-area').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function limpiarFormulario() {
+  ['categoria','marca','producto','gramaje','precio','precio-promo','nombre-promo','vig-ini','vig-fin','comentarios']
+    .forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  if (promoOn) togglePromo();
+  document.getElementById('foto-preview').style.display = 'none';
+  document.getElementById('photo-area').style.display = 'block';
+  document.getElementById('foto-input').value = '';
+  actualizarMarcas();
+}
+
+function guardarRegistro() {
+  const cat   = document.getElementById('categoria').value;
+  const mar   = document.getElementById('marca').value;
+  const prod  = document.getElementById('producto').value;
+  const precio= document.getElementById('precio').value;
+  if (!cat)   { showToast('Selecciona la categoría'); return; }
+  if (!mar)   { showToast('Selecciona la marca'); return; }
+  if (!prod)  { showToast('Selecciona el producto'); return; }
+  if (!precio){ showToast('Escribe el precio normal'); return; }
+
+  const fotoInput = document.getElementById('foto-input');
+  records.push({
+    fecha:       visita.fecha,
+    promotor:    visita.promotor,
+    cadena:      visita.cadena,
+    ciudad:      visita.ciudad,
+    categoria:   cat,
+    marca:       mar,
+    producto:    prod,
+    gramaje:     document.getElementById('gramaje').value,
+    precioNormal: parseFloat(precio).toFixed(2),
+    tienePromo:  promoOn ? 'SI' : 'NO',
+    precioPromo: promoOn ? (document.getElementById('precio-promo').value || '') : '',
+    nombrePromo: promoOn ? (document.getElementById('nombre-promo').value || '') : '',
+    vigIni:      promoOn ? (document.getElementById('vig-ini').value || '') : '',
+    vigFin:      promoOn ? (document.getElementById('vig-fin').value || '') : '',
+    comentarios: document.getElementById('comentarios').value,
+    fotoCapturada: fotoInput.files.length > 0 ? 'Si' : 'No',
+  });
+
+  document.getElementById('badge').textContent = records.length;
+  showToast('Registro guardado', 'accent');
+  limpiarFormulario();
+  irPaso3();
+}
+
+function renderResumen() {
+  const total = records.length;
+  const conPromo = records.filter(r => r.tienePromo === 'SI').length;
+  const conFoto  = records.filter(r => r.fotoCapturada === 'Si').length;
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-promo').textContent = conPromo;
+  document.getElementById('stat-foto').textContent  = conFoto;
+
+  const lista = document.getElementById('lista-registros');
+  if (!total) { lista.innerHTML = '<div class="empty">Aun no hay registros</div>'; return; }
+
+  lista.innerHTML = [...records].reverse().map(r => `
+    <div class="record">
+      <div class="record-info">
+        <div class="record-prod">${r.producto}</div>
+        <div class="record-meta">${r.marca} &middot; ${r.categoria}</div>
+        <div class="record-meta">${r.cadena} &mdash; ${r.ciudad}</div>
+        <span class="tag ${r.tienePromo==='SI'?'tag-si':'tag-no'}">${r.tienePromo==='SI'?'Con promocion':'Sin promocion'}</span>
+      </div>
+      <div class="record-price">$${r.precioNormal}</div>
+    </div>`).join('');
+}
+
+function descargarExcel() {
+  if (!records.length) { showToast('No hay registros aun'); return; }
+  const headers = ['Fecha','Promotor','Cadena','Ciudad','Categoria','Marca','Producto',
+    'Gramaje','Precio Normal','Tiene Promocion','Precio Promo','Nombre Promo',
+    'Vigencia Inicio','Vigencia Fin','Comentarios','Foto Capturada'];
+  const rows = records.map(r => [
+    r.fecha, r.promotor, r.cadena, r.ciudad, r.categoria, r.marca, r.producto,
+    r.gramaje, r.precioNormal, r.tienePromo, r.precioPromo, r.nombrePromo,
+    r.vigIni, r.vigFin, r.comentarios, r.fotoCapturada
+  ]);
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+  ws['!cols'] = headers.map((_, i) => ({ wch: i === 6 ? 42 : i < 4 ? 18 : 16 }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Captura');
+  XLSX.utils.writeFile(wb, `Captura_Precios_${visita.fecha || new Date().toISOString().split('T')[0]}_${visita.cadena || 'promotor'}.xlsx`);
+  showToast('Descargando Excel...', 'accent');
+}
+
+document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+setStep(1);
+</script>
+</body>
+</html>
